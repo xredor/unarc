@@ -1,0 +1,22 @@
+Список внесённых изменений
++1. Интерфейсы для установки параметров алгоритма заменены на прямую установку в упаковщике и распаковщике
++2. Память освобождается по окончании каждой операции упаковки/распаковки
++3. FindMatchFinder переделан на использование char вместо wchar_t
++4. Буфер рангкодера уменьшен с 1 мб до 64 кб: RC_BUF_SIZE
++5. При распаковке запись производится каждые 256 кб (LARGE_BUFFER_SIZE)
++6. размер хеша и выделение памяти (CalcHashSize, ReservedAreaSize)
++6. разбить на 3 части (hash,son) и сначала выделять меньший блок; MatchFinder_Normalize3
++6. kMtMaxValForNormalize=(1<<30)-1, так как большие значения используются в ht4 mf
++7. kDicLogSizeMaxCompress = 31;  MF_HashTable;  hashSize;  LzmaEncProps_Normalize
+8. compress_all_at_once
++9. maxDist[] = {0, 0, 128, 2048, 64<<10, 2<<20, 12<<20}  (оптимизация lazy matching)
++10. "Если нашёлся подходящий REPDIST, то используем его при определённых условиях"*2  (оптимизация lazy matching)
+11. LZMA_LOG_BSR (BSR работает быстро на Intel, но очень медленно на AMD K7/K8)
++12. InitializeCriticalSection exception
++13. использовать big_alloc
+14. -m3: использовать lzma:a1 поскольку оно быстрее на многоядерных cpu?
+    "(lzma:fast:32:mc8|lzma:normal:8:mc3|...)" - синтаксис для выбора алгоритма в зависимости от значения -mt
+    "(dict+lzp+grzip:m3|grzip)" для -m3t
+15. DEF_GetHeads, GetHeadsHt4, HASH4_CALC, MT_HASH4_CALC: использовать умножение
++16. многопоточность + a1 + hc4/ht4 не работает (программа вылетает после обработки dictSize/2 байт)
+17. GetHeadsHt4 isn't 64-bit compatible

@@ -1,0 +1,79 @@
+Date        Version  New features compared to previous version
+
+2007-04-16  0.1      Bytecoder, bitcoder and 2^n semi-dynamic RangeCoder
+                     Greedy parsing
+                     Only 4+ byte matches
+                     Hashtable matchfinders: simple and caching
+                     Blockwise compression
+
+2007-05-11  0.2      Huffman coder
+                     Lazy parsing
+                     3-byte matches
+                     Dropping too far matches
+                     Sliding window
+                     Gzip-like cmdline interface
+
+2007-07-25  0.25     Repdist, repboth and repchar codes
+                     2-byte matches
+                     Improved lz parsing
+                     Delta filter
+
+2008-03-13  0.3      Huffman decoder with variable block size
+                     Tested on 100 gb of data and fixed all bugs found
+
+2008-04-08  0.4      Cycling matchfinder
+                     Large, updated at each step hashes for 2/3-byte strings
+                     More interactive user interface
+
+2008-06-02  0.4a     Fixed bug in Huffman coder: unstable sorting
+                     Win32 & Linux versions
+
+2008-10-28  0.4b     Added -11:c1 .. -11:c3 modes
+
+2009-01-01  0.5      Removed modes -6 -8 -10 -12, renumerated -7/9/11 to -6/7/8
+                     -7/-8: 1% better compression and 5-20% better speed due to use of ht5
+                     New -9..-11 modes: 2gb hash and ht5..ht7 match finders
+                     In small tornado.exe -c1..-c3 available for -7..-11 modes
+                     Support for -l not power of 2   (in all matchfinders?)
+                     Options -ah, -al, -t#, -cpu, -q, -delete, stats->stderr
+                     Checks at decoding in order to prevent segfaults
+                     MSVC/ICL compatibility, use of wall-clock times
+                     Linux: 64-bit file offsets!
+                     PowerPC (big-endian cpus) compatibility, thanks to Joachim Henke
+                     64-bit compilers support!
+                     -3 mode compression improved by 2-3%
+                     2mb hash in -4/-5 modes improved speed by 20-30%
+                     Fixed long-standing decompression bug (table split across 2 write chunks)
+                     Removed CHECK_FOR_DATA_TABLE(2) in -3/-4 modes
+
+
+shift buffer by 1/8, 1/16... for large -l
+-h512m:64, -ah512m:64, -h -ah -b<128m
+hufblock=50.000 in -3 & for texts/compressed
+no rep codes in -3  (also useful for -2 -c3)
+
+skip 0/32 when calculating hash
+check matches at REP_DIST first	(should improve compression for binary files)
+len7*2: add accept_match check in first cycle
+multithreading (support multiple blocks in decoder)
+optimal parsing
+split cycled caching hash into two parts - pointers and data (probably useful only for optimal parsing because there is no update() in this case)
+-t2 full delta filter
+-6 -> switch to CCMF<4>	?
+MFN<MINLEN,MAXLEN> with checks for dist<48k/... and exit when len>=MAXLEN
+maxdist for len=8..9 in accept_match() - may improve compression for 256mb-1gb dictionaries
+chunked hash (15 elements + pointer to the next chunk)
+-kadach lazy
+-use prevlen to skip checking useless matches (with len<=prevlen)
+-if len>32 then lazy_search_row/=4
++match_writer that dynamically uses byte/bit/huf/aricoder
++kadach huffman   (5000/3)
+
+ускорение lazy parsing благодар€ одновременной проверке двух позиций
+1. tor -5/-6: ищем матчи дл€ p+1, в хеш-таблице сохран€ем p[0,4,5,6],
+              провер€ем сразу матчи на p и p+1,
+              если Ќ»„≈√ќ не найдено - ищем матчи дл€ p до дистанции 48к
+2. в старших режимах - после нахождени€ матча размером N+4 переключаемс€ на поиск
+        матчей дл€ p+4 (или p+1..p+3). или просто ищем на шару :)
+
+lzma: искать сразу матчи дл€ p и p+1, заполн€€ две таблицы. при отсутствии результатов - быстрый поиск дл€ p (до 48к)

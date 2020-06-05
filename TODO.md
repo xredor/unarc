@@ -1,0 +1,2 @@
+- Eliminate deprecations and warnings 
+- Write CMakeLists.txt instead of Makefile

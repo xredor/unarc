@@ -1,0 +1,8 @@
+Изменения, внесённые в код PPMD:
+
+1. в PPMdType.h использован класс PRIME_STREAM, настроенный на использование callbacks
+2. BOOL _STDCALL StartSubAllocator(UINT t) - теперь получает размер памяти в байтах, а не мегабайтах
+3. static void _STDCALL StartModelRare(int _MaxOrder,MR_METHOD _MRMethod)
+   чтобы заменить ::MaxOrder/::MRMethod на MaxOrder/MRMethod
+4. Максимальный порядок модели: MAX_O=128
+5. Компилируется только с -O1 !
