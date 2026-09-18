@@ -35,7 +35,7 @@
 
 #define mymax(a,b)               ((a)>(b)? (a) : (b))
 
-const unsigned long bit_mask32[33] = {
+const uint32 bit_mask32[33] = {
     0x00000000, 0x00000001, 0x00000003, 0x00000007,
     0x0000000f, 0x0000001f, 0x0000003f, 0x0000007f,
     0x000000ff, 0x000001ff, 0x000003ff, 0x000007ff,
@@ -47,7 +47,7 @@ const unsigned long bit_mask32[33] = {
     0xffffffff
 };
 
-const unsigned long bit_shift[40] = {
+const uint32 bit_shift[40] = {
     0x00000001, 0x00000002, 0x00000004, 0x00000008,
     0x00000010, 0x00000020, 0x00000040, 0x00000080,
     0x00000100, 0x00000200, 0x00000400, 0x00000800,
@@ -60,13 +60,13 @@ const unsigned long bit_shift[40] = {
     0x80000000, 0x80000000, 0x80000000, 0x80000000
 };
 
-const unsigned long *shift_16 = bit_shift + 4;
+const uint32 *shift_16 = bit_shift + 4;
 
 unsigned char *bit_array_read;
-unsigned long bit_array_read_size, bit_array_read_bits;
+uint32 bit_array_read_size, bit_array_read_bits;
 
 unsigned char *bit_array_write;
-unsigned long bit_array_write_size, bit_array_write_bits;
+uint32 bit_array_write_size, bit_array_write_bits;
 
 void
 init_bit_array_write (void) {
@@ -76,28 +76,28 @@ init_bit_array_write (void) {
 }
 
 void
-init_bit_array_read (unsigned long size) {
+init_bit_array_read (uint32 size) {
     bit_array_read_size = size;
     bit_array_read = (unsigned char *) malloc1d (bit_array_read_size, sizeof(char));
     bit_array_read_bits = 0;
 }
 
-long
+int32
 get_len (void) {
     return (bit_array_write_bits >> 3) + ((bit_array_write_bits & 7UL)? 1:0);
 }
 
 __inline void
-put_binary (unsigned long value, unsigned long bits) {
-    unsigned long fbit = bit_array_write_bits & 0x1FUL;
-    unsigned long rbit = 32 - fbit;
-    unsigned long pos = bit_array_write_bits >> 5;
+put_binary (uint32 value, uint32 bits) {
+    uint32 fbit = bit_array_write_bits & 0x1FUL;
+    uint32 rbit = 32 - fbit;
+    uint32 pos = bit_array_write_bits >> 5;
 
     if ((pos << 2) + 8 > bit_array_write_size) {
         bit_array_write = (unsigned char *) realloc (bit_array_write, bit_array_write_size += STEP_SIZE);
         if (!bit_array_write) tta_error (MEMORY_ERROR, NULL);
     }
-    unsigned long *s = ((unsigned long *)bit_array_write) + pos;
+    uint32 *s = ((uint32 *)bit_array_write) + pos;
 
     *s &= bit_mask32[fbit];
     *s |= (value & bit_mask32[bits]) << fbit;
@@ -107,21 +107,21 @@ put_binary (unsigned long value, unsigned long bits) {
 }
 
 __inline void
-put_unary (unsigned long value) {
-    unsigned long fbit = bit_array_write_bits & 0x1FUL;
-    unsigned long rbit = 32 - fbit;
-    unsigned long pos = bit_array_write_bits >> 5;
+put_unary (uint32 value) {
+    uint32 fbit = bit_array_write_bits & 0x1FUL;
+    uint32 rbit = 32 - fbit;
+    uint32 pos = bit_array_write_bits >> 5;
 
     if ((pos << 2) + value > bit_array_write_size) {
         bit_array_write = (unsigned char *) realloc (bit_array_write, bit_array_write_size += mymax(STEP_SIZE,value/8+10));
         if (!bit_array_write) tta_error (MEMORY_ERROR, NULL);
     }
-    unsigned long *s = ((unsigned long *)bit_array_write) + pos;
+    uint32 *s = ((uint32 *)bit_array_write) + pos;
 
     *s &= bit_mask32[fbit];
     if (value < rbit) *s |= (bit_mask32[value]) << fbit;
     else {
-        unsigned long unary = value;
+        uint32 unary = value;
         *s++ |= (bit_mask32[rbit]) << fbit; unary -= rbit;
         for (;unary > 32; unary -= 32) *s++ = bit_mask32[32];
         if (unary) *s = bit_mask32[unary];
@@ -131,11 +131,11 @@ put_unary (unsigned long value) {
 }
 
 __inline void
-get_binary (unsigned long *value, unsigned long bits) {
-    unsigned long fbit = bit_array_read_bits & 0x1FUL;
-    unsigned long rbit = 32 - fbit;
-    unsigned long pos = bit_array_read_bits >> 5;
-    unsigned long *s = ((unsigned long *) bit_array_read) + pos;
+get_binary (uint32 *value, uint32 bits) {
+    uint32 fbit = bit_array_read_bits & 0x1FUL;
+    uint32 rbit = 32 - fbit;
+    uint32 pos = bit_array_read_bits >> 5;
+    uint32 *s = ((uint32 *) bit_array_read) + pos;
 
     *value = 0;
 
@@ -152,12 +152,12 @@ get_binary (unsigned long *value, unsigned long bits) {
 }
 
 __inline void
-get_unary (unsigned long *value) {
-    unsigned long fbit = bit_array_read_bits & 0x1FUL;
-    unsigned long rbit = 32 - fbit;
-    unsigned long pos = bit_array_read_bits >> 5;
-    unsigned long *s = ((unsigned long *) bit_array_read) + pos;
-    unsigned long mask = 1;
+get_unary (uint32 *value) {
+    uint32 fbit = bit_array_read_bits & 0x1FUL;
+    uint32 rbit = 32 - fbit;
+    uint32 pos = bit_array_read_bits >> 5;
+    uint32 *s = ((uint32 *) bit_array_read) + pos;
+    uint32 mask = 1;
 
     *value = 0;
 
@@ -173,16 +173,16 @@ get_unary (unsigned long *value) {
 }
 
 void
-encode_frame (long *data, unsigned long len) {
-    long *p;
-    unsigned long value;
-    unsigned long unary, binary;
+encode_frame (int32 *data, uint32 len) {
+    int32 *p;
+    uint32 value;
+    uint32 unary, binary;
 
-    unsigned long k;
-    unsigned long k0 = 10;
-    unsigned long k1 = 10;
-    unsigned long sum0 = shift_16[k0];
-    unsigned long sum1 = shift_16[k1];
+    uint32 k;
+    uint32 k0 = 10;
+    uint32 k1 = 10;
+    uint32 sum0 = shift_16[k0];
+    uint32 sum1 = shift_16[k1];
 
 
     for (p = data; p < data + len; p++) {
@@ -228,15 +228,15 @@ encode_frame (long *data, unsigned long len) {
 }
 
 void
-decode_frame (long *data, unsigned long len) {
-    long *p, value;
-    unsigned long unary, binary;
+decode_frame (int32 *data, uint32 len) {
+    int32 *p, value;
+    uint32 unary, binary;
 
-    unsigned long k;
-    unsigned long k0 = 10;
-    unsigned long k1 = 10;
-    unsigned long sum0 = shift_16[k0];
-    unsigned long sum1 = shift_16[k1];
+    uint32 k;
+    uint32 k0 = 10;
+    uint32 k1 = 10;
+    uint32 sum0 = shift_16[k0];
+    uint32 sum1 = shift_16[k1];
     int depth;
 
     for (p = data; p < data + len; p++) {

@@ -38,9 +38,9 @@
 #define M_LN2       0.69314718055994530942
 #endif
 
-#define PREDICTOR1(x, k)    ((long)((((uint64)x << k) - x) >> k))
+#define PREDICTOR1(x, k)    ((int32)((((uint64)x << k) - x) >> k))
 
-void filters_compress   (long *data, unsigned long len, long level, long byte_size);
-void filters_decompress (long *data, unsigned long len, long level, long byte_size);
+void filters_compress   (int32 *data, uint32 len, int32 level, int32 byte_size);
+void filters_decompress (int32 *data, uint32 len, int32 level, int32 byte_size);
 
 #endif  /* FILTERS_H */

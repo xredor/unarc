@@ -315,10 +315,6 @@ int MultiDecompress (char *_method, CALLBACK_FUNC *callback, void *auxdata)
 static DWORD WINAPI multi_decompress_thread (void *paramPtr)
 {
   Params *param = (Params*) paramPtr;
-  // Ќе запускать этот thread, пока не началс€ вывод из предыдущего (дл€ экономии пам€ти)
-  if (param->thread_num > 0)
-    param->read.Lock(),           // ожидаем разрешени€ на чтение (по€влени€ данных в буфере)
-    param->read.Release();        // возвращаем разрешение на чтение
   //printf("\nstarted %d    ", param->thread_num);
   int ret = Decompress (param->method, multi_decompress_callback, param);
   // Abort multi_decompress if decompress() returned error code

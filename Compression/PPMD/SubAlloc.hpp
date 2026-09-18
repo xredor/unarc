@@ -5,7 +5,7 @@
  *  Contents: memory allocation routines                                    *
  ****************************************************************************/
 
-enum { UNIT_SIZE=12, N1=4, N2=4, N3=4, N4=(128+3-1*N1-2*N2-3*N3)/4,
+enum { UNIT_SIZE=4+2*sizeof(char*), N1=4, N2=4, N3=4, N4=(128+3-1*N1-2*N2-3*N3)/4,
         N_INDEXES=N1+N2+N3+N4 };
 
 #pragma pack(1)
@@ -39,7 +39,7 @@ inline void BLK_NODE::insert(void* pv,int NU) {
     p->Stamp=~0UL;                          p->NU=NU;
     Stamp++;
 }
-inline UINT U2B(UINT NU) { return 8*NU+4*NU; }
+inline UINT U2B(UINT NU) { return UNIT_SIZE*NU; }
 inline void SplitBlock(void* pv,UINT OldIndx,UINT NewIndx)
 {
     UINT i, k, UDiff=Indx2Units[OldIndx]-Indx2Units[NewIndx];
@@ -135,12 +135,7 @@ inline void* AllocContext()
 }
 inline void UnitsCpy(void* Dest,void* Src,UINT NU)
 {
-    DWORD* p1=(DWORD*) Dest, * p2=(DWORD*) Src;
-    do {
-        p1[0]=p2[0];                        p1[1]=p2[1];
-        p1[2]=p2[2];
-        p1 += 3;                            p2 += 3;
-    } while ( --NU );
+    memcpy(Dest,Src,(size_t)NU*UNIT_SIZE);
 }
 inline void* ExpandUnits(void* OldPtr,UINT OldNU)
 {

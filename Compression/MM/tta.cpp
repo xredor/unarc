@@ -52,7 +52,7 @@ static int channels[] = {1,2,0};
 static int bitvalues[] = {8,16,0};
 
 
-void tta_error (long error, const char *name)
+void tta_error (int32 error, const char *name)
 {
     switch (error) {
     case COMMAND_ERROR:
@@ -86,28 +86,28 @@ void *malloc1d (size_t num, size_t size)
     return (array);
 }
 
-long **malloc2d (long num, unsigned long len)
+int32 **malloc2d (int32 num, uint32 len)
 {
-    long    i, **array, *tmp;
+    int32    i, **array, *tmp;
 
-    array = (long **) calloc (num, sizeof(long *) + len * sizeof(long));
+    array = (int32 **) calloc (num, sizeof(int32 *) + len * sizeof(int32));
     if (array == NULL) tta_error (MEMORY_ERROR, NULL);
 
-    for(i = 0, tmp = (long *) array + num; i < num; i++)
+    for(i = 0, tmp = (int32 *) (array + num); i < num; i++)
         array[i] = tmp + i * len;
 
     return (array);
 }
 
 #ifndef FREEARC_DECOMPRESS_ONLY
-static long read_wave (long *data, void *rest, void **bufferptr, void *prevbuf, long prevsize, long byte_size, long num_chan, unsigned long len, CALLBACK_FUNC *callback, void *auxdata)
+static int32 read_wave (int32 *data, void *rest, void **bufferptr, void *prevbuf, int32 prevsize, int32 byte_size, int32 num_chan, uint32 len, CALLBACK_FUNC *callback, void *auxdata)
 {
-    long i, rest_bytes, elements;
+    int32 i, rest_bytes, elements;
     char *buffer = (char*) malloc1d (len + 2, num_chan*byte_size);
-    long wanted = len*num_chan*byte_size;
-    long use_prevsize = mymin(prevsize,wanted);
+    int32 wanted = len*num_chan*byte_size;
+    int32 use_prevsize = mymin(prevsize,wanted);
     memcpy (buffer, prevbuf, use_prevsize);
-    long bytes_read =  wanted <= prevsize?  0  :  callback ("read", buffer+prevsize, wanted-prevsize, auxdata);
+    int32 bytes_read =  wanted <= prevsize?  0  :  callback ("read", buffer+prevsize, wanted-prevsize, auxdata);
 
     if (bytes_read >= 0) {  // If read ok
         bytes_read += use_prevsize;
@@ -119,25 +119,25 @@ static long read_wave (long *data, void *rest, void **bufferptr, void *prevbuf, 
         case 1: {
                     unsigned char *sbuffer = (unsigned char *)buffer;
                     for (i = 0; i < elements; i++)
-                        data[i] = (long) sbuffer[i] - 0x80;
+                        data[i] = (int32) sbuffer[i] - 0x80;
                     break;
                 }
         case 2: {
                     short *sbuffer = (short*)buffer;
                     for (i = 0; i < elements; i++)
-                        data[i] = (long) sbuffer[i];
+                        data[i] = (int32) sbuffer[i];
                     break;
                 }
         case 3: {
                     unsigned char *sbuffer = (unsigned char *)buffer;
                     for (i = 0; i < elements; i++) {
-                        unsigned long t = *((long *)(sbuffer + i * byte_size));
-                        data[i] = (long) (t << 8) >> 8;
+                        uint32 t = *((int32 *)(sbuffer + i * byte_size));
+                        data[i] = (int32) (t << 8) >> 8;
                     }
                     break;
                 }
         case 4: {
-                    long *sbuffer = (long*)buffer;
+                    int32 *sbuffer = (int32*)buffer;
                     for (i = 0; i < elements; i++)
                         data[i] = sbuffer[i];
                     break;
@@ -149,10 +149,10 @@ static long read_wave (long *data, void *rest, void **bufferptr, void *prevbuf, 
 }
 #endif
 
-static long write_wave (long **data, long byte_size, long num_chan, unsigned long len, CALLBACK_FUNC *callback, void *auxdata)
+static int32 write_wave (int32 **data, int32 byte_size, int32 num_chan, uint32 len, CALLBACK_FUNC *callback, void *auxdata)
 {
-    long    n;
-    long    i, res;
+    int32    n;
+    int32    i, res;
     void    *buffer;
 
     buffer = malloc1d (len * num_chan + 2, byte_size);
@@ -174,11 +174,11 @@ static long write_wave (long **data, long byte_size, long num_chan, unsigned lon
                 unsigned char *sbuffer = (unsigned char *)buffer;
                 for (i = 0; i < (len * num_chan); i+= num_chan)
                 for (n = 0; n < num_chan; n++)
-                    *((long *)(sbuffer + (i+n) * byte_size)) = data[n][i/num_chan];
+                    *((int32 *)(sbuffer + (i+n) * byte_size)) = data[n][i/num_chan];
                 break;
             }
     case 4: {
-                long *sbuffer = (long*)buffer;
+                int32 *sbuffer = (int32*)buffer;
                 for (i = 0; i < (len * num_chan); i+= num_chan)
                 for (n = 0; n < num_chan; n++) sbuffer[i+n] = data[n][i/num_chan];
                 break;
@@ -191,9 +191,9 @@ static long write_wave (long **data, long byte_size, long num_chan, unsigned lon
 }
 
 #ifndef FREEARC_DECOMPRESS_ONLY
-void split_int (long *data, long frame_len, long num_chan, long **buffer)
+void split_int (int32 *data, int32 frame_len, int32 num_chan, int32 **buffer)
 {
-    long    i, j, n;
+    int32    i, j, n;
 
     for (i = 0; i < frame_len; i++)
     for (j = 0; j < num_chan; j++) {
@@ -209,9 +209,9 @@ void split_int (long *data, long frame_len, long num_chan, long **buffer)
 }
 #endif
 
-void combine_int (long frame_len, long num_chan, long **buffer)
+void combine_int (int32 frame_len, int32 num_chan, int32 **buffer)
 {
-    long    i, j, n;
+    int32    i, j, n;
 
     if (num_chan > 1)
     for (i = 0, n = (num_chan - 1); i < frame_len; i++) {
@@ -222,16 +222,16 @@ void combine_int (long frame_len, long num_chan, long **buffer)
 }
 
 #ifndef FREEARC_DECOMPRESS_ONLY
-void split_float (long *data, long frame_len, long num_chan, long **buffer)
+void split_float (int32 *data, int32 frame_len, int32 num_chan, int32 **buffer)
 {
-    long    i, j;
+    int32    i, j;
 
     for (i = 0; i < frame_len; i++)
     for (j = 0; j < num_chan; j++) {
-        unsigned long t = data[i * num_chan + j];
-        unsigned long negative = (t & 0x80000000)? -1:1;
-        unsigned long data_hi = (t & 0x7FFF0000) >> 16;
-        unsigned long data_lo = (t & 0x0000FFFF);
+        uint32 t = data[i * num_chan + j];
+        uint32 negative = (t & 0x80000000)? -1:1;
+        uint32 data_hi = (t & 0x7FFF0000) >> 16;
+        uint32 data_lo = (t & 0x0000FFFF);
 
         buffer[j][i] = data_hi - 0x3F80;
         buffer[j+num_chan][i] = (SWAP16(data_lo) + 1) * negative;
@@ -239,15 +239,15 @@ void split_float (long *data, long frame_len, long num_chan, long **buffer)
 }
 #endif
 
-void combine_float (long frame_len, long num_chan, long **buffer)
+void combine_float (int32 frame_len, int32 num_chan, int32 **buffer)
 {
-    long    i, j;
+    int32    i, j;
 
     for (i = 0; i < frame_len; i++)
     for (j = 0; j < num_chan; j++) {
-        unsigned long negative = buffer[j+num_chan][i] & 0x80000000;
-        unsigned long data_hi = buffer[j][i];
-        unsigned long data_lo = abs(buffer[j+num_chan][i]) - 1;
+        uint32 negative = buffer[j+num_chan][i] & 0x80000000;
+        uint32 data_hi = buffer[j][i];
+        uint32 data_lo = abs(buffer[j+num_chan][i]) - 1;
 
         data_hi += 0x3F80;
         buffer[j][i] = (data_hi << 16) | SWAP16(data_lo) | negative;
@@ -258,11 +258,11 @@ void combine_float (long frame_len, long num_chan, long **buffer)
 #ifndef FREEARC_DECOMPRESS_ONLY
 int tta_compress (int level, int skip_header, int is_float, int num_chan, int word_size, int offset, int raw_data, CALLBACK_FUNC *callback, void *auxdata)
 {
-    long            *data=NULL, **buffer=NULL;
+    int32            *data=NULL, **buffer=NULL;
     void            *rest=NULL, *origdata=NULL;
     char            *prevptr=NULL, *prevbuf=NULL;
-    unsigned long   i, j, bytes_read, prevsize=0;
-    unsigned long   frame_size, frame_len, bit_array_size;
+    uint32   i, j, bytes_read, prevsize=0;
+    uint32   frame_size, frame_len, bit_array_size;
     unsigned char   header[4];
     int             errcode, byte_size;
     bit_array_write = NULL;
@@ -329,13 +329,13 @@ storing:
     //printf ("offset ok\n");
 
     // grab some space for buffers
-    data = (long *) malloc1d (num_chan * frame_size, sizeof (long));
+    data = (int32 *) malloc1d (num_chan * frame_size, sizeof (int32));
     rest = malloc1d (num_chan, byte_size);
     buffer = malloc2d (num_chan << is_float, frame_size);
     //printf ("malloc ok\n");
 
     while (1) {
-        // Read next input block and convert it into long values
+        // Read next input block and convert it into int32 values
         bytes_read = read_wave (data, rest, &origdata, prevptr, prevsize, byte_size, num_chan, frame_size, callback, auxdata);
         frame_len = bytes_read/(num_chan*byte_size);
         if (bytes_read>=prevsize) {
@@ -366,10 +366,10 @@ storing:
                 if (raw_data==2)
                     // Convert signed values to unsigned ones
                     for (j = 0; j < frame_len; j++) {
-                        long t = buffer[i][j];
+                        int32 t = buffer[i][j];
                         buffer[i][j] =  t>=0 ? t*2 : (-t)*2-1;
                     }
-                WRITE (buffer[i], frame_len*sizeof(long));
+                WRITE (buffer[i], frame_len*sizeof(int32));
             }
         }
         //printf ("Data encoded\n");
@@ -405,12 +405,12 @@ finished:
 
 int tta_decompress (CALLBACK_FUNC *callback, void *auxdata)
 {
-    long    **buffer=NULL;
+    int32    **buffer=NULL;
     void    *rest=NULL;
     void    *buf1=NULL;
     void    *prevbuf=NULL;
-    unsigned long   i, level, raw_data, num_chan, word_size, byte_size, bytes_read, offset;
-    unsigned long   is_float, frame_len, bit_array_size;
+    uint32   i, level, raw_data, num_chan, word_size, byte_size, bytes_read, offset;
+    uint32   is_float, frame_len, bit_array_size;
     unsigned char   header[4];
     int errcode;
     bit_array_read = NULL;
@@ -478,7 +478,7 @@ int tta_decompress (CALLBACK_FUNC *callback, void *auxdata)
 
         for (i = 0; i < (num_chan << is_float); i++) {
             if (raw_data) {
-                READ (buffer[i], frame_len*sizeof(long));
+                READ (buffer[i], frame_len*sizeof(int32));
             } else {
                 decode_frame (buffer[i], frame_len);
             }

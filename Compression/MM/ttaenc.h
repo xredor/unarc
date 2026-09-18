@@ -74,9 +74,9 @@
 
 #define LINE "------------------------------------------------------------"
 
-void tta_error (long error, const char *name);
+void tta_error (int32 error, const char *name);
 void *malloc1d (size_t num, size_t size);
-long **malloc2d (long num, unsigned long len);
+int32 **malloc2d (int32 num, uint32 len);
 
 int tta_compress (int level, int skip_header, int is_float, int num_chan, int word_size, int offset, int raw_data, CALLBACK_FUNC *callback, void *auxdata);
 int tta_decompress (CALLBACK_FUNC *callback, void *auxdata);

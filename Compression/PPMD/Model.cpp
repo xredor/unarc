@@ -354,6 +354,7 @@ NO_LOOP:
         if ( !pc1 )                         return NULL;
         ((DWORD*) pc1)[0] = ((DWORD*) &ct)[0];
         ((DWORD*) pc1)[1] = ((DWORD*) &ct)[1];
+        ((DWORD*) pc1)[2] = ((DWORD*) &ct)[2];
         pc1->Suffix=pc;                     (*--pps)->Successor=pc=pc1;
     } while (pps != ps);
     return pc;

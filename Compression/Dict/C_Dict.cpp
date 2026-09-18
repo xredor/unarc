@@ -47,7 +47,7 @@ int dict_decompress (MemSize BlockSize, int MinCompression, int MinWeakChars, in
   int x;            // код произошедшей ошибки
   for(;;) {
     int InSize; unsigned OutSize;   // количество байт во входном и выходном буфере, соответственно
-    checked_read (&InSize, sizeof(InSize));
+    checked_eof_read (&InSize, sizeof(InSize));
     if (InSize<0) {
         // скопируем неупакованные данные
         In = (BYTE*) BigAlloc(-InSize);

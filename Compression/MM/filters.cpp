@@ -34,15 +34,15 @@
 #include "filters.h"
 
 typedef struct {
-    long order;
-    long mode;
-    long shift;
-    long round;
-    long qm[MAX_ORDER];
-    long dx[BUF_SIZE];
-    long dl[BUF_SIZE];
-    long *px;
-    long *pl;
+    int32 order;
+    int32 mode;
+    int32 shift;
+    int32 round;
+    int32 qm[MAX_ORDER];
+    int32 dx[BUF_SIZE];
+    int32 dl[BUF_SIZE];
+    int32 *px;
+    int32 *pl;
 } fltst;
 
 ///////// Filters Settings /////////
@@ -61,9 +61,9 @@ static int flt_set [3][3][4][3] = {
 };
 
 __inline void
-filter_compress (fltst *fs, long *in) {
-    long *pA, *pB, *pE;
-    long out, sum;
+filter_compress (fltst *fs, int32 *in) {
+    int32 *pA, *pB, *pE;
+    int32 out, sum;
 
     pA = fs->pl;
     pB = fs->qm;
@@ -133,21 +133,21 @@ filter_compress (fltst *fs, long *in) {
 
     if (fs->px + fs->order == fs->dx + (BUF_SIZE-1)) {
         memcpy(fs->dx, fs->px + 1, fs->order *
-            sizeof(long)); fs->px = fs->dx;
+            sizeof(int32)); fs->px = fs->dx;
     } else  fs->px++;
 
     if (fs->pl + fs->order ==  fs->dl + (BUF_SIZE-1)) {
         memcpy(fs->dl, fs->pl + 1, fs->order *
-            sizeof(long)); fs->pl = fs->dl;
+            sizeof(int32)); fs->pl = fs->dl;
     } else fs->pl++;
 
     *in = out;
 }
 
 __inline void
-filter_decompress (fltst *fs, long *in) {
-    long *pA, *pB, *pE;
-    long out, sum;
+filter_decompress (fltst *fs, int32 *in) {
+    int32 *pA, *pB, *pE;
+    int32 out, sum;
 
     pA = fs->pl;
     pB = fs->qm;
@@ -217,12 +217,12 @@ filter_decompress (fltst *fs, long *in) {
 
     if (fs->px + fs->order == fs->dx + (BUF_SIZE - 1)) {
         memcpy(fs->dx, fs->px + 1, fs->order *
-            sizeof(long)); fs->px = fs->dx;
+            sizeof(int32)); fs->px = fs->dx;
     } else  fs->px++;
 
     if (fs->pl + fs->order ==  fs->dl + (BUF_SIZE - 1)) {
         memcpy(fs->dl, fs->pl + 1, fs->order *
-            sizeof(long)); fs->pl = fs->dl;
+            sizeof(int32)); fs->pl = fs->dl;
     } else fs->pl++;
 
     *in = out;
@@ -240,11 +240,11 @@ filter_init (fltst *fs, int order, int shift, int mode) {
 }
 
 void
-filters_compress (long *data, unsigned long len, long level, long byte_size) {
+filters_compress (int32 *data, uint32 len, int32 level, int32 byte_size) {
     fltst fst1, fst2, fst3;
 
-    long *p = data;
-    long tmp, last;
+    int32 *p = data;
+    int32 tmp, last;
 
     int *f1 = flt_set[0][level-1][byte_size-1];
     int *f2 = flt_set[1][level-1][byte_size-1];
@@ -272,11 +272,11 @@ filters_compress (long *data, unsigned long len, long level, long byte_size) {
 }
 
 void
-filters_decompress (long *data, unsigned long len, long level, long byte_size) {
+filters_decompress (int32 *data, uint32 len, int32 level, int32 byte_size) {
     fltst fst1, fst2, fst3;
 
-    long *p = data;
-    long last;
+    int32 *p = data;
+    int32 last;
 
     int *f1 = flt_set[0][level-1][byte_size-1];
     int *f2 = flt_set[1][level-1][byte_size-1];
