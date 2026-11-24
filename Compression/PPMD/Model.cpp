@@ -352,8 +352,8 @@ NO_LOOP:
     do {
         PPM_CONTEXT* pc1 = (PPM_CONTEXT*) AllocContext();
         if ( !pc1 )                         return NULL;
-        ((DWORD*) pc1)[0] = ((DWORD*) &ct)[0];
-        ((DWORD*) pc1)[1] = ((DWORD*) &ct)[1];
+        pc1->NumStats=ct.NumStats;          pc1->Flags=ct.Flags;
+        StateCpy(pc1->oneState(),ct.oneState());
         pc1->Suffix=pc;                     (*--pps)->Successor=pc=pc1;
     } while (pps != ps);
     return pc;
