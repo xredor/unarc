@@ -5,7 +5,7 @@
  *  Contents: memory allocation routines                                    *
  ****************************************************************************/
 
-enum { UNIT_SIZE=12, N1=4, N2=4, N3=4, N4=(128+3-1*N1-2*N2-3*N3)/4,
+enum { UNIT_SIZE=4+2*sizeof(void*), N1=4, N2=4, N3=4, N4=(128+3-1*N1-2*N2-3*N3)/4,
         N_INDEXES=N1+N2+N3+N4 };
 
 #pragma pack(1)
@@ -36,10 +36,10 @@ inline void PrefetchData(void* Addr)
 }
 inline void BLK_NODE::insert(void* pv,int NU) {
     MEM_BLK* p=(MEM_BLK*) pv;               link(p);
-    p->Stamp=~0UL;                          p->NU=NU;
+    p->Stamp=DWORD(-1);                          p->NU=NU;
     Stamp++;
 }
-inline UINT U2B(UINT NU) { return 8*NU+4*NU; }
+inline UINT U2B(UINT NU) { return UNIT_SIZE*NU; }
 inline void SplitBlock(void* pv,UINT OldIndx,UINT NewIndx)
 {
     UINT i, k, UDiff=Indx2Units[OldIndx]-Indx2Units[NewIndx];
@@ -86,7 +86,7 @@ static void GlueFreeBlocks()
             while ( BList[i].avail() ) {
                 p=(MEM_BLK*) BList[i].remove();
                 if ( !p->NU )               continue;
-                while ((p1=p+p->NU)->Stamp == ~0UL) {
+                while ((p1=(MEM_BLK*) ((BYTE*) p+U2B(p->NU)))->Stamp == DWORD(-1)) {
                     p->NU += p1->NU;        p1->NU=0;
                 }
                 p0->link(p);                p0=p;
@@ -94,10 +94,10 @@ static void GlueFreeBlocks()
     while ( s0.avail() ) {
         p=(MEM_BLK*) s0.remove();           sz=p->NU;
         if ( !sz )                          continue;
-        for ( ;sz > 128;sz -= 128, p += 128)
+        for ( ;sz > 128;sz -= 128, p=(MEM_BLK*) ((BYTE*) p+U2B(128)))
                 BList[N_INDEXES-1].insert(p,128);
         if (Indx2Units[i=Units2Indx[sz-1]] != sz) {
-            k=sz-Indx2Units[--i];           BList[k-1].insert(p+(sz-k),k);
+            k=sz-Indx2Units[--i];           BList[k-1].insert((BYTE*) p+U2B(sz-k),k);
         }
         BList[i].insert(p,Indx2Units[i]);
     }
@@ -135,12 +135,7 @@ inline void* AllocContext()
 }
 inline void UnitsCpy(void* Dest,void* Src,UINT NU)
 {
-    DWORD* p1=(DWORD*) Dest, * p2=(DWORD*) Src;
-    do {
-        p1[0]=p2[0];                        p1[1]=p2[1];
-        p1[2]=p2[2];
-        p1 += 3;                            p2 += 3;
-    } while ( --NU );
+    memcpy(Dest,Src,U2B(NU));
 }
 inline void* ExpandUnits(void* OldPtr,UINT OldNU)
 {
@@ -171,7 +166,7 @@ inline void FreeUnits(void* ptr,UINT NU) {
 inline void SpecialFreeUnit(void* ptr)
 {
     if ((BYTE*) ptr != UnitsStart)          BList->insert(ptr,1);
-    else { *(DWORD*) ptr=~0UL;              UnitsStart += UNIT_SIZE; }
+    else { *(DWORD*) ptr=DWORD(-1);              UnitsStart += UNIT_SIZE; }
 }
 inline void* MoveUnitsUp(void* OldPtr,UINT NU)
 {
@@ -188,8 +183,8 @@ static inline void ExpandTextArea()
 {
     BLK_NODE* p;
     UINT Count[N_INDEXES];                  memset(Count,0,sizeof(Count));
-    while ((p=(BLK_NODE*) UnitsStart)->Stamp == ~0UL) {
-        MEM_BLK* pm=(MEM_BLK*) p;           UnitsStart=(BYTE*) (pm+pm->NU);
+    while ((p=(BLK_NODE*) UnitsStart)->Stamp == DWORD(-1)) {
+        MEM_BLK* pm=(MEM_BLK*) p;           UnitsStart=(BYTE*) pm+U2B(pm->NU);
         Count[Units2Indx[pm->NU-1]]++;      pm->Stamp=0;
     }
     for (UINT i=0;i < N_INDEXES;i++)
